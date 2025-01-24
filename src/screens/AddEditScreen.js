@@ -25,10 +25,10 @@ export default function AddEditScreen({ route, navigation }) {
     }
 
     const newTask = {
-      id: task?.id || Date.now().toString(), // שמירת id קיים או יצירת id ייחודי למשימה חדשה
+      id: task?.id || Date.now().toString(), 
       title: taskTitle,
-      completed: isEdit ? taskCompleted : false, // אם זה עריכה, שמור את הסטטוס הקיים
-      deadline: taskDeadline.toISOString().split("T")[0], // המרת תאריך לפורמט מתאים
+      completed: isEdit ? taskCompleted : false, 
+      deadline: taskDeadline.toISOString().split("T")[0],
     };
 
     navigation.navigate("List", { newTask, isEdit });
