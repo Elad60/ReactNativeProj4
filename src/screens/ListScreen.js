@@ -2,12 +2,13 @@ import React, { useContext } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
   TouchableOpacity,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { TaskContext } from "../../TaskContext";
+import styles from "../styles/ListScreenStyles"; 
+
 
 export default function ListScreen({ route, navigation }) {
   const { tasks, setTasks } = useContext(TaskContext);
@@ -23,6 +24,12 @@ export default function ListScreen({ route, navigation }) {
       setTasks(updatedTasks);
     }
   }, [route.params?.newTask]);
+
+  // Function to remove a task
+  const removeTask = (taskId) => {
+    const updatedTasks = tasks.filter((task) => task.id !== taskId);
+    setTasks(updatedTasks);
+  };
 
   const renderTask = ({ item }) => (
     <View
@@ -50,6 +57,14 @@ export default function ListScreen({ route, navigation }) {
         >
           <Icon name="create-outline" size={24} color="#FFA500" />
         </TouchableOpacity>
+        {item.completed && (
+          <TouchableOpacity
+            style={styles.removeButton}
+            onPress={() => removeTask(item.id)}
+          >
+            <Icon name="trash-outline" size={24} color="#FF4C4C" />
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -63,51 +78,4 @@ export default function ListScreen({ route, navigation }) {
       />
     </View>
   );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#f9f9f9",
-  },
-  taskItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 15,
-    marginBottom: 10,
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  taskContainer: {
-    backgroundColor: "#fff",
-  },
-  completedTaskContainer: {
-    backgroundColor: "#d4edda",
-  },
-  taskText: {
-    fontSize: 18,
-    fontWeight: "500",
-    color: "#333",
-  },
-  completedTask: {
-    fontSize: 18,
-    fontWeight: "500",
-    color: "#6c757d",
-    textDecorationLine: "line-through",
-  },
-  deadlineText: {
-    fontSize: 14,
-    color: "#6c757d",
-    marginTop: 5,
-  },
-  iconsContainer: {
-    flexDirection: "row",
-    gap: 15,
-  },
-});
+} 

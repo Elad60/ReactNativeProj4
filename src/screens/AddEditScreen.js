@@ -1,69 +1,125 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Alert,
 } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import DatePicker from "react-native-ui-datepicker";
+import dayjs from "dayjs";
+import styles from "../styles/AddEditScreenStyles"; 
 
 export default function AddEditScreen({ route, navigation }) {
   const { task, isEdit } = route.params || {};
   const [taskTitle, setTaskTitle] = useState(task?.title || "");
   const [taskCompleted, setTaskCompleted] = useState(task?.completed || false);
   const [taskDeadline, setTaskDeadline] = useState(
-    task?.deadline ? new Date(task.deadline) : new Date()
+    task?.deadline ? dayjs(task.deadline) : dayjs()
   );
-  const [showPicker, setShowPicker] = useState(false);
+  const [taskDescription, setTaskDescription] = useState(
+    task?.description || ""
+  );
+  const [titleError, setTitleError] = useState(""); // Error for title
+  const [descriptionError, setDescriptionError] = useState(""); // Error for description
+
+  // Validate Description - 100 character limit
+  const validateDescription = (description) => {
+    const charCount = description.length;
+
+    if (charCount > 100) {
+      setDescriptionError(
+        `Description must be under 100 characters (currently: ${charCount})`
+      );
+      return false;
+    }
+
+    setDescriptionError(""); // Clear description error if valid
+    return true;
+  };
+
+  const validateTitle = (title) => {
+    const charCount = title.length;
+
+    if (charCount === 0) {
+      setTitleError("Title cannot be empty");
+      return false;
+    }
+
+    if (charCount > 35) {
+      setTitleError(
+        `Title must be under 35 characters (currently: ${charCount})`
+      );
+      return false;
+    }
+
+    setTitleError(""); // Clear error if valid
+    return true;
+  };
+
+  // Validate title and description when the component mounts
+  useEffect(() => {
+    validateTitle(taskTitle);
+    validateDescription(taskDescription);
+  }, [taskTitle, taskDescription]);
 
   const handleSave = () => {
-    if (taskTitle.trim() === "") {
-      Alert.alert("Validation", "Task title cannot be empty!");
+    if (!validateTitle(taskTitle) || !validateDescription(taskDescription)) {
       return;
     }
 
     const newTask = {
-      id: task?.id || Date.now().toString(), 
+      id: task?.id || Date.now().toString(),
       title: taskTitle,
-      completed: isEdit ? taskCompleted : false, 
-      deadline: taskDeadline.toISOString().split("T")[0],
+      description: taskDescription,
+      completed: isEdit ? taskCompleted : false,
+      deadline: taskDeadline.format("YYYY-MM-DD"),
     };
 
     navigation.navigate("List", { newTask, isEdit });
   };
+
+  const isSubmitDisabled = titleError !== "" || descriptionError !== "";
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{isEdit ? "Edit Task" : "Add New Task"}</Text>
       <TextInput
         style={styles.input}
-        placeholder="Task Title"
+        placeholder="Task Title (Max 30 characters)"
+        multiline
         value={taskTitle}
-        onChangeText={setTaskTitle}
+        onChangeText={(text) => {
+          setTaskTitle(text);
+          validateTitle(text);
+        }}
       />
-      <TouchableOpacity
-        style={styles.dateButton}
-        onPress={() => setShowPicker(true)}
-      >
-        <Text style={styles.dateButtonText}>
-          Pick Deadline: {taskDeadline.toISOString().split("T")[0]}
-        </Text>
-      </TouchableOpacity>
-      {showPicker && (
-        <DateTimePicker
-          value={taskDeadline}
-          mode="date"
-          display="default"
-          onChange={(event, selectedDate) => {
-            setShowPicker(false);
-            if (selectedDate) {
-              setTaskDeadline(selectedDate);
-            }
-          }}
-        />
+      {titleError !== "" && (
+        <Text style={styles.errorText}>{titleError}</Text>
       )}
+
+      <TextInput
+        style={[styles.input, styles.descriptionInput]}
+        placeholder="Task Description (Max 100 characters)"
+        multiline
+        value={taskDescription}
+        onChangeText={(text) => {
+          setTaskDescription(text);
+          validateDescription(text);
+        }}
+      />
+      {descriptionError !== "" && (
+        <Text style={styles.errorText}>{descriptionError}</Text>
+      )}
+
+      <Text style={styles.label}>Select Task Deadline:</Text>
+      <DatePicker
+        mode="single"
+        date={taskDeadline}
+        onChange={(event) => setTaskDeadline(event.date)}
+        minDate={dayjs().add(-1, "day")}
+        maxDate={dayjs().add(1, "year")}
+      />
+
       {isEdit && (
         <TouchableOpacity
           style={[
@@ -77,74 +133,14 @@ export default function AddEditScreen({ route, navigation }) {
           </Text>
         </TouchableOpacity>
       )}
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+
+      <TouchableOpacity
+        style={[styles.saveButton, isSubmitDisabled && styles.disabledButton]}
+        onPress={handleSave}
+        disabled={isSubmitDisabled}
+      >
         <Text style={styles.saveButtonText}>Save Task</Text>
       </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#f9f9f9",
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-    color: "#333",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 20,
-    fontSize: 16,
-    backgroundColor: "#fff",
-  },
-  dateButton: {
-    backgroundColor: "#E0E0E0",
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    marginBottom: 20,
-    alignItems: "center",
-  },
-  dateButtonText: {
-    color: "#333",
-    fontSize: 16,
-  },
-  statusButton: {
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    marginBottom: 20,
-    alignItems: "center",
-  },
-  completed: {
-    backgroundColor: "#28a745",
-  },
-  notCompleted: {
-    backgroundColor: "#dc3545",
-  },
-  statusButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  saveButton: {
-    backgroundColor: "#007BFF",
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  saveButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-});

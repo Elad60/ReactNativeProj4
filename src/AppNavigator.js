@@ -15,11 +15,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="List" component={ListScreen} />
         <Stack.Screen name="Details" component={DetailsScreen} />
-        <Stack.Screen
-          name="AddEdit"
-          component={AddEditScreen}
-          options={{ title: "Add or Edit Task" }}
-        />
+        <Stack.Screen name="AddEdit" component={AddEditScreen} options={{ title: "Add or Edit Task" }}/>
       </Stack.Navigator>
     </NavigationContainer>
   );
